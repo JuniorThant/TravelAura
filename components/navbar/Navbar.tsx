@@ -2,6 +2,7 @@ import NavSearch from "./NavSearch"
 import LinksDropsown from "./LinksDropdown"
 import DarkMode from "./DarkMode"
 import Logo from "./Logo"
+import MenuBar from "./MenuBar"
 
 export default function Navbar() {
   return (
@@ -10,6 +11,7 @@ export default function Navbar() {
             <Logo/>
             <NavSearch/>
             <div className="flex gap-4 items-center">
+                <MenuBar/>
                 <DarkMode/>
                 <LinksDropsown/>
             </div>

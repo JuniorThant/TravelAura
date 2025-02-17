@@ -16,7 +16,194 @@ model Profile {
   username     String
   email        String
   profileImage String
+  role         String     
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  properties Property[]
+  airlines Airline[]
+  tours Tour[]
+  favorites Favorite[]
+  booking RoomBooking[]
+  airBooking AirBooking[]
+  tourBooking TourBooking[]
+}
 
+model Property {
+  id          String     @id @default(uuid())
+  name        String
+  tagline     String
+  category    String
+  image       String
+  address     String
+  description String
+  amenities   String
+  file        String     
+  permit      String     @default("Pending")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  profile     Profile    @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId   String
+  room      Room[]
+  favorites Favorite[]
+}
+
+model Airline {
+  id          String     @id @default(uuid())
+  name        String
+  tagline     String
+  logo        String
+  image       String
+  description String
+  file        String     
+  permit      String     @default("Pending")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  profile     Profile    @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId   String
+  schedule Schedule[]
+  favorites Favorite[]
+}
+
+model Tour {
+  id          String     @id @default(uuid())
+  name        String
+  tagline     String
+  image       String
+  address     String
+  description String
+  file        String    
+  permit      String     @default("Pending")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  profile     Profile    @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId   String
+  favorites Favorite[]
+  packages Package[]
+  tourBooking TourBooking[]
+}
+
+model Room {
+  id          String     @id @default(uuid())
+  type        String
+  image       String
+  description String
+  price       Int
+  guests      Int
+  quantity    Int
+  beds        String
+  amenities   String
+  view        String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  property    Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId  String
+  booking RoomBooking[]
+}
+
+model Schedule {
+  id                  String   @id @default(uuid())
+  flightCode          String   @unique            // Unique flight identifier (e.g., AA1234)
+  departureTime       DateTime                    // Date and time of departure
+  arrivalTime         DateTime                    // Date and time of arrival
+  origin              String                      // Airport or city of origin
+  destination         String
+  originAirport       String
+  destinationAirport  String
+  price               Int                      // Destination airport or city
+  status              String                      // Flexible field for flight status (e.g., "On Time", "Delayed")
+  amenities           String                   // Flight amenities (e.g., meals, Wi-Fi)
+  economyCount        Int
+  businessCount       Int
+  firstClassCount     Int
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  airline             Airline  @relation(fields: [airlineId], references: [id], onDelete: Cascade) // Relation to Airline
+  airlineId           String
+  airBooking          AirBooking[]
+}
+
+model Package {
+  id                  String     @id @default(uuid())
+  name                String
+  departureDate       DateTime
+  arrivalDate         DateTime
+  price               Int
+  maxGuests           Int
+  description         String
+  itinerary           String
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  tour    Tour   @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  tourId  String
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId String
+
+  property   Property?  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String?
+
+  airline   Airline?  @relation(fields: [airlineId], references: [id], onDelete: Cascade)
+  airlineId String?
+
+  tour      Tour?     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  tourId    String?
+}
+
+enum FavoriteType {
+  PROPERTY
+  AIRLINE
+  TOUR
+}
+
+model RoomBooking {
+  id            String   @id @default(uuid())
+  profile       Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId     String
+
+  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId        String
+
+  orderTotal    Int
+  totalNights   Int
+  checkIn       DateTime
+  checkOut      DateTime
+  paymentStatus Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AirBooking {
+  id            String   @id @default(uuid())
+  profile       Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId     String
+
+  schedule          Schedule     @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  scheduleId        String
+
+  orderTotal    Int
+  passengers    Int
+  paymentStatus Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model TourBooking {
+  id            String   @id @default(uuid())
+  profile       Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId     String
+
+  tour          Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  tourId        String
+
+  orderTotal    Int
+  passengers    Int
+  paymentStatus Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
