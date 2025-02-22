@@ -11,7 +11,7 @@ import FileInput from '@/components/form/FileInput';
 export default function CreatePropertyPage() {
   return <section>
         <h1 className="text-2xl font-semibold mb-8 capitalize">
-            create property
+            register property
         </h1>
         <div className="border p-8 rounded">
             <h3 className="text-lg mb-4 font-medium">General Info</h3>

@@ -4,30 +4,46 @@ import PropertyRating from "./ItemRating";
 import FavoriteToggleButton from "./FavoriteToggleButton";
 import { ItemCardProps } from "@/utils/types";
 import ItemRating from "./ItemRating";
+import { fetchLowestPrice } from "@/utils/actions";
 
-export default function ItemCard({ item, pathname }: { item: ItemCardProps, pathname?: string }) {
+export default async function ItemCard({ item, pathname }: { item: ItemCardProps, pathname?: string }) {
   const { id, name, image, tagline, type } = item;
-
-  // Determine the appropriate link based on the item type
   const itemLink = `/${type === "property" ? "properties" : type === "airline" ? "airlines" : "tours"}/${id}`;
+  const lowestPrice=await fetchLowestPrice(id,type)
 
-  // Function to render the "Create" button based on pathname
   const renderCreateButton = () => {
     if (pathname === "/rentals") {
-      return <Link href={`/rentals/${id}/rooms/create`}>
-      <button className="mt-2 p-2 bg-blue-500 text-white rounded">Create Room</button>
-    </Link>;
-    } else if (pathname === "/myairlines") {
-      return <Link href={`/myairlines/${id}/schedules/create`}>
-      <button className="mt-2 p-2 bg-blue-500 text-white rounded">Create Airline Schedule</button>
-    </Link>;;
-    } else if (pathname === "/mytours") {
-      return <button className="mt-2 p-2 bg-blue-500 text-white rounded">Create Tour Schedule</button>;
-    } else {
       return (<>
-    <p className="text-sm mt-1 text-muted-foreground">
-      {tagline?.substring(0, 40)}
-    </p></>)  // Return nothing if the pathname doesn't match any of the above
+        <Link href={`/rentals/${id}/edit`}>
+          <button className="mt-2 p-2 m-2 bg-blue-500 text-white rounded">Edit Property</button>
+        </Link>
+        <Link href={`/rentals/${id}/rooms/create`}>
+        <button className="mt-2 p-2 m-2 bg-blue-500 text-white rounded">Create Room</button>
+      </Link>
+      </>
+      );
+    } else if (pathname === "/myairlines") {
+      return (<>
+        <Link href={`/myairlines/${id}/edit`}>
+          <button className="mt-2 m-2 p-2 ml-3 bg-blue-500 text-white rounded">Edit Airline</button>
+        </Link>
+        <Link href={`/myairlines/${id}/schedules/create`}>
+          <button className="mt-2 m-2 p-2 bg-blue-500 text-white rounded">Create Schedule</button>
+        </Link>
+        </>
+      );
+    } else if (pathname === "/mytours") {
+      return (<>
+      <Link href={`/mytours/${id}/edit`}>
+          <button className="mt-2 m-2 p-2 ml-3 bg-blue-500 text-white rounded">Edit Tour</button>
+        </Link>
+        <Link href={`/mytours/${id}/packages/create`}>
+          <button className="mt-2 p-2 bg-blue-500 text-white rounded">Create Package</button>
+        </Link>
+        </>
+      );
+    } else {
+      return <p className="text-sm mt-1 text-muted-foreground">{tagline?.substring(0, 40)}</p>;
     }
   };
 
@@ -43,19 +59,19 @@ export default function ItemCard({ item, pathname }: { item: ItemCardProps, path
             className="rounded-md object-cover transform group-hover:scale-110 transition-transform duration-500"
           />
         </div>
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-semibold mt-1">
-            {name.substring(0, 30)}
-          </h3>
-          {type === "property" && (
-            <ItemRating inPage={false} itemId={id} itemType="property" />
-          )}
-        </div>
-        {renderCreateButton()}
       </Link>
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-semibold mt-1">
+          <Link href={itemLink}>{name}</Link>
+        </h3>
+        <h6 className="text-xs font-semibold w-[150px] text-right">Starts from {lowestPrice}</h6>
+      </div>
+      {/* Move Create Button outside of the main Link */}
+      {renderCreateButton()}
       <div className="absolute top-5 right-5 z-5">
         <FavoriteToggleButton itemId={id} itemType={type} />
       </div>
     </article>
   );
 }
+

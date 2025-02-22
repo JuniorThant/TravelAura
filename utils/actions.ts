@@ -1,11 +1,11 @@
 "use server"
-import { airlineSchema, fileSchema, imageSchema, profileSchema, propertySchema, roomSchema, scheduleSchema, tourSchema, validateWithZodSchema } from "./schema"
+import { airlineSchema, fileSchema, imageSchema, packageSchema, profileSchema, propertySchema, roomSchema, scheduleSchema, tourSchema, validateWithZodSchema } from "./schema"
 import db from './db';
 import {  clerkClient, currentUser } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { UploadFile, UploadImage } from "./supabase";
-import { calculateTotals, calculateTotalsAirline } from "./calculateTotals";
+import { calculateTotals, calculateTotalsAirline, calculateTotalsTour } from "./calculateTotals";
 import { RoomProps } from "./types";
 import { formatDate } from "./format";
 import { sendApprovalEmail } from "./email";
@@ -36,14 +36,15 @@ export const hasProperty=async(clerkId:string | null)=>{
       select: {
         properties: {
           select: {
-            id: true, // Select the property ID
+            id: true,
+            permit:true
           },
         },
       },
     });
 
     // Check if the user has any properties
-    if (user?.properties && user.properties.length > 0) {
+    if (user?.properties && user.properties.some(property => property.permit === 'Allowed')) {
       return true; // The user has created at least one property
     }}
       return false; // The user hasn't created any property
@@ -52,6 +53,34 @@ export const hasProperty=async(clerkId:string | null)=>{
       return false; // Return false in case of an error
     }
   };
+
+  export const hasTour=async(clerkId:string | null)=>{
+    try {
+      if(clerkId){
+      const user = await db.profile.findUnique({
+        where: {
+          clerkId,
+        },
+        select: {
+          tours: {
+            select: {
+              id: true, // Select the property ID
+              permit:true
+            },
+          },
+        },
+      });
+  
+      // Check if the user has any properties
+      if (user?.tours && user.tours.some(tour => tour.permit === 'Allowed')) {
+        return true; // The user has created at least one property
+      }}
+        return false; // The user hasn't created any property
+      } catch (error) {
+        console.error('Error checking properties:', error);
+        return false; // Return false in case of an error
+      }
+    };
 
   export const hasAirline=async(clerkId:string | null)=>{
     try {
@@ -64,13 +93,14 @@ export const hasProperty=async(clerkId:string | null)=>{
           airlines: {
             select: {
               id: true, // Select the property ID
+              permit:true
             },
           },
         },
       });
   
       // Check if the user has any properties
-      if (user?.airlines && user.airlines.length > 0) {
+      if (user?.airlines && user.airlines.some(airline => airline.permit === 'Allowed')) {
         return true; // The user has created at least one property
       }
     }
@@ -80,6 +110,46 @@ export const hasProperty=async(clerkId:string | null)=>{
         return false; // Return false in case of an error
       }
     };
+
+    export const fetchLowestPrice = async (id: string, type: 'property' | 'airline' | 'tour') => {
+      try {
+        let lowestPrice = null;
+    
+        if (type === 'property') {
+          const room = await db.room.findFirst({
+            where: { propertyId: id },
+            orderBy: { price: 'asc' },
+            select: { price: true }
+          });
+          lowestPrice = room?.price ?? null;
+        } else if (type === 'airline') {
+          const schedule = await db.schedule.findFirst({
+            where: { airlineId: id },
+            orderBy: { price: 'asc' },
+            select: { price: true }
+          });
+          lowestPrice = schedule?.price ?? null;
+        } else if (type === 'tour') {
+          const tourPackage = await db.package.findFirst({
+            where: { tourId: id },
+            orderBy: { price: 'asc' },
+            select: { price: true }
+          });
+          lowestPrice = tourPackage?.price ?? null;
+        }
+    
+        return lowestPrice !== null ? `$${lowestPrice}` : '$200';
+      } catch (error) {
+        if (error && typeof error === 'object') {
+          console.error('Error fetching lowest price:', error);
+        } else {
+          console.error('Error fetching lowest price: Unknown error');
+        }
+        return 'N/A'; // ✅ Always return a string instead of an object
+      }
+    };
+    
+    
 
 export const fetchAirlineById = async (id: string) => {
   try {
@@ -135,7 +205,7 @@ export const createProfileAction = async (prevState: any, formData: FormData) =>
 }
 
 export const fetchProfileImage = async () => {
-    const user = await currentUser()
+    try{const user = await currentUser()
     if (!user) return null
     const profile = await db.profile.findUnique({
         where: {
@@ -146,7 +216,9 @@ export const fetchProfileImage = async () => {
         }
     })
 
-    return profile?.profileImage
+    return profile?.profileImage}catch(error){
+      return null
+    }
 }
 
 
@@ -158,6 +230,7 @@ export const haveProperty = async (id: string): Promise<boolean> => {
 
   return !!property;
 };
+
 
 
 export const fetchProfile = async () => {
@@ -238,7 +311,8 @@ export const updateProfileImage = async (
                 file:pdfPath
             }
         })
-        redirect('/')
+        revalidatePath('/')
+        return{message:'Property registered successful, It will take 3 to 5 days to verify your property'}
     }catch(error){
         return renderError(error)
     }
@@ -270,10 +344,10 @@ export const updateProfileImage = async (
                 file:pdfPath
             }
         })
-      redirect('/airlines')
     } catch (error) {
         return renderError(error)
     }
+    redirect('/airlines')
   };
   
 
@@ -518,7 +592,8 @@ export const updateProfileImage = async (
     // Query properties that the logged-in user has created (profileId matches user.id)
     const properties = await db.property.findMany({
       where: {
-        profileId: user.id,  // Only fetch properties where the profileId matches the user's id
+        profileId: user.id, 
+        permit:'Allowed'
       },
       select: {
         id: true,
@@ -559,6 +634,7 @@ export const fetchMyAirlines = async () => {
       createdAt: 'desc',  
     },
   });
+  
 
   return {
     airlines: airlines.map(airline => ({
@@ -568,6 +644,37 @@ export const fetchMyAirlines = async () => {
     pathname: '/myairlines',  
   };
 };
+
+export const fetchMyTours = async () => {
+  const user = await getAuthUser();  
+  
+
+  const tours = await db.tour.findMany({
+    where: {
+      profileId: user.id,  
+    },
+    select: {
+      id: true,
+      name: true,
+      tagline: true,
+      image: true,
+    },
+    orderBy: {
+      createdAt: 'desc',  
+    },
+  });
+  
+
+  return {
+    tours: tours.map(tour => ({
+      ...tour,
+      type: 'tour' as const,  
+    })),
+    pathname: '/mytours',  
+  };
+};
+
+
 
 export const createRoomAction = async (
   prevState: any,
@@ -642,12 +749,47 @@ export const createScheduleAction = async (
         airlineId,
       },
     });
-    redirect('/myairlines')
+
+  } catch (error) {
+    return renderError(error); // Handle error
+  }
+  redirect('/myairlines')
+};
+
+export const createPackageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  
+  const rawData = Object.fromEntries(formData);
+  const file=formData.get('image') as File
+  try {
+    const tourId = rawData.tourId as string;
+
+    // Validate fields with Zod schema
+    const maxGuests=parseInt(rawData.maxGuests as string, 10);
+    const updatedRawData = {
+      ...rawData,
+      maxGuests
+    };
+    
+    const validatedFields = validateWithZodSchema(packageSchema, updatedRawData);
+    const validatedFile = validateWithZodSchema(imageSchema, { image: file });
+    const fullPath = await UploadImage(validatedFile.image);
+    // Create schedule in the database with validated data, similar to how `createRoomAction` works
+    await db.package.create({
+      data: {
+        ...validatedFields,
+        tourId,
+        image:fullPath
+      },
+    });
+    revalidatePath('/mytours')
+    return{message:"package created successfully"}
   } catch (error) {
     return renderError(error); // Handle error
   }
 };
-
 
 export const fetchPropertyDetails=async(id:string)=>{
   return db.property.findUnique({
@@ -682,6 +824,18 @@ export const fetchTourDetails=async(id:string)=>{
   })
 }
 
+export const fetchPackages=async({tourId}:{tourId:string})=>{
+  const packages=await db.package.findMany({
+    where:{
+      tourId
+    },
+    orderBy:{
+      createdAt:'desc'
+    }
+  })
+  return packages
+}
+
 export const fetchRooms = async ({
   propertyId,
   checkIn,
@@ -703,7 +857,6 @@ export const fetchRooms = async ({
       id: true,
       type: true,
       image: true,
-      description: true,
       price: true,
       guests: true,
       quantity: true,
@@ -765,6 +918,7 @@ export const createBookingAction = async (prevState: {
   checkOut: Date;
 }) => {
   const user = await getAuthUser();
+  let bookingId:null|string=null
   const { roomId, checkIn, checkOut } = prevState;
   const room = await db.room.findUnique({
     where: { id: roomId },
@@ -789,100 +943,126 @@ export const createBookingAction = async (prevState: {
         roomId
       }
     })
+    bookingId=booking.id
   } catch (error) {
     return renderError(error)
   }
-  redirect('/bookings')
+  redirect(`/checkout?bookingId=${bookingId}&property=true`)
 };
 
 export const createAirlineBookingAction = async (prevState: {
   scheduleIds: string[];  // Multiple schedule IDs
-  prices: number[];       // Multiple prices
+  prices: number[];       // Multiple prices (per flight)
   guests: number;         // Number of guests
   flightClass: string;    // "economy", "business", or "firstClass"
 }) => {
   const user = await getAuthUser();
   const { scheduleIds, prices, guests, flightClass } = prevState;
 
-  // Loop through the scheduleIds and prices if there are more than one
+  let bookingIds: string[] = []; // ✅ Store multiple booking IDs
+
   for (let i = 0; i < scheduleIds.length; i++) {
     const scheduleId = scheduleIds[i];
     const price = prices[i];
-    
+
     // Fetch the flight schedule from the database
     const flightSchedule = await db.schedule.findUnique({
       where: { id: scheduleId },
-      select: { id: true, economyCount: true, businessCount: true, firstClassCount: true },
+      select: {
+        id: true,
+        economyCount: true,
+        businessCount: true,
+        firstClassCount: true,
+      },
     });
 
     if (!flightSchedule) {
       return { message: "Flight Schedule Not Found" };
     }
 
-    // Check for available seats based on the class
-    let availableSeats = 0;
-    if (flightClass === "economy") {
-      availableSeats = flightSchedule.economyCount;
-    } else if (flightClass === "business") {
-      availableSeats = flightSchedule.businessCount;
-    } else if (flightClass === "firstClass") {
-      availableSeats = flightSchedule.firstClassCount;
-    }
+    // Determine available seats based on class
+    let availableSeats =
+      flightClass === "economy"
+        ? flightSchedule.economyCount
+        : flightClass === "business"
+        ? flightSchedule.businessCount
+        : flightSchedule.firstClassCount;
 
-    // If there are not enough available seats, return an error
+    // Check if there are enough available seats
     if (availableSeats < guests) {
       return { message: `Not Enough Available Seats in ${flightClass} Class` };
     }
 
     // Calculate total for the booking
-    const orderTotal = price * guests;
+    const { orderTotalAir } = calculateTotalsAirline({
+      priceOneWay: price,
+      guests: guests,
+    });
 
     try {
       // Create the airline booking
-      await db.airBooking.create({
+      const booking = await db.airBooking.create({
         data: {
           scheduleId,
-          orderTotal,
+          orderTotal: orderTotalAir,
           passengers: guests,
           profileId: user.id,
         },
       });
 
-      // Update available seats based on the class
-      if (flightClass === "economy") {
-        await db.schedule.update({
-          where: { id: scheduleId },
-          data: {
-            economyCount: flightSchedule.economyCount - guests,
-          },
-        });
-      } else if (flightClass === "business") {
-        await db.schedule.update({
-          where: { id: scheduleId },
-          data: {
-            businessCount: flightSchedule.businessCount - guests,
-          },
-        });
-      } else if (flightClass === "firstClass") {
-        await db.schedule.update({
-          where: { id: scheduleId },
-          data: {
-            firstClassCount: flightSchedule.firstClassCount - guests,
-          },
-        });
-      }
+      // Store the booking ID
+      bookingIds.push(booking.id);
+
+      // Update available seats in the database
+      const seatField =
+        flightClass === "economy"
+          ? "economyCount"
+          : flightClass === "business"
+          ? "businessCount"
+          : "firstClassCount";
+
+      await db.schedule.update({
+        where: { id: scheduleId },
+        data: { [seatField]: availableSeats - guests },
+      });
     } catch (error) {
-      return renderError(error);
+      return { message: "Error Creating Booking", error };
     }
   }
 
-  redirect('/airline-bookings');
+  // ✅ Redirect with multiple booking IDs for Stripe payment
+  redirect(`/checkout?bookingIds=${bookingIds.join(",")}&airline=true`);
 };
 
+export const createTourBookingAction = async (prevState: {
+  packageId: string;
+  pricePackage: number;
+  guestsPackage: number;
+}) => {
+  const user = await getAuthUser();
+  const { packageId, pricePackage, guestsPackage } = prevState;
+  let bookingId:null|string=null
 
+  // Calculate totals using provided function
+  const { orderTotalPackage } = calculateTotalsTour({ pricePackage, guestsPackage });
 
+  try {
+    // Create the tour booking
+    const booking=await db.tourBooking.create({
+      data: {
+        packageId,
+        orderTotal: orderTotalPackage,
+        passengers: guestsPackage,
+        profileId: user.id,
+      },
+    });
+    bookingId=booking.id
+  } catch (error) {
+    return renderError(error);
+  }
 
-
+  redirect(`/checkout?bookingId=${bookingId}&tour=true`)
+};
 
 export const fetchSchedules = async ({
   airlineId,
@@ -931,7 +1111,7 @@ export const fetchSchedules = async ({
     return schedules;
   }
 
-
+  // Apply filters conditionally only if parameters are provided
   const filterSchedules = (date: Date, origin?: string, destination?: string) => {
     return schedules.filter((schedule) => {
       const availableSeats =
@@ -950,6 +1130,7 @@ export const fetchSchedules = async ({
     });
   };
 
+  // Handle filtering based on travel date and other parameters
   if (travelDate && !returnDate) {
     return filterSchedules(travelDate, origin, destination);
   }
@@ -977,14 +1158,30 @@ export const fetchSchedules = async ({
     return roundTripSchedules;
   }
 
-  return [];
+  // Fallback case when no travelDate or returnDate is set
+  return schedules.filter((schedule) => {
+    const availableSeats =
+      travelClass === "economy"
+        ? schedule.economyCount
+        : travelClass === "business"
+        ? schedule.businessCount
+        : schedule.firstClassCount;
+
+    return (
+      availableSeats >= guests &&
+      (!origin || schedule.origin === origin) &&
+      (!destination || schedule.destination === destination)
+    );
+  });
 };
+
 
 export const fetchRoomBookings = async () => {
   const user = await getAuthUser();
   const bookings = await db.roomBooking.findMany({
     where: {
       profileId: user.id,
+      paymentStatus:true
     },
     include: {
       room: {
@@ -1007,11 +1204,38 @@ export const fetchRoomBookings = async () => {
   return bookings;
 };
 
+export const fetchTourBookings=async()=>{
+  const user=await getAuthUser()
+  const bookings=await db.tourBooking.findMany({
+    where:{
+      profileId:user.id,
+      paymentStatus:true
+    },
+    include:{
+      package:{
+        select:{
+          id:true,
+          name:true,
+          departureDate:true,
+          arrivalDate:true,
+        }
+      }
+    },
+    orderBy:{
+      package:{
+        departureDate:'desc'
+      }
+    }
+  })
+  return bookings
+}
+
 export const fetchAirBookings = async () => {
   const user = await getAuthUser();
   const bookings = await db.airBooking.findMany({
     where: {
       profileId: user.id,
+      paymentStatus:true
     },
     include: {
       schedule: {
@@ -1092,6 +1316,7 @@ export const fetchRoomsRentals = async () => {
       properties: {
         select: {
           id: true,
+          name:true
         },
       },
     },
@@ -1113,8 +1338,19 @@ export const fetchRoomsRentals = async () => {
       id: true,
       type: true,
       price: true,
-      propertyId:true
+      propertyId:true,
+      property:{
+        select:{
+          id:true,
+          name:true
+        }
+      }
     },
+    orderBy:{
+      property:{
+        createdAt:'desc'
+      }
+    }
   });
 
   // Fetch total nights and order total sums for each rental
@@ -1123,6 +1359,7 @@ export const fetchRoomsRentals = async () => {
       const totalNightsSum = await db.roomBooking.aggregate({
         where: {
           roomId: rental.id,
+          paymentStatus:true
         },
         _sum: {
           totalNights: true,
@@ -1132,6 +1369,7 @@ export const fetchRoomsRentals = async () => {
       const orderTotalSum = await db.roomBooking.aggregate({
         where: {
           roomId: rental.id,
+          paymentStatus:true
         },
         _sum: {
           orderTotal: true,
@@ -1160,7 +1398,7 @@ export const fetchSchedulesRentals = async () => {
     select: {
       airlines: {
         select: {
-          id: true,
+          id: true
         },
       },
     },
@@ -1182,7 +1420,21 @@ export const fetchSchedulesRentals = async () => {
       id: true,
       flightCode: true,
       price: true,
+      origin:true,
+      destination:true,
+      airlineId:true,
+      airline:{
+        select:{
+          id:true,
+          name:true
+        }
+      }
     },
+    orderBy:{
+      airline:{
+        createdAt:'desc'
+      }
+    }
   });
 
   // Fetch total nights and order total sums for each rental
@@ -1191,6 +1443,7 @@ export const fetchSchedulesRentals = async () => {
       const totalPassengersSum = await db.airBooking.aggregate({
         where: {
           scheduleId: rental.id,
+          paymentStatus:true
         },
         _sum: {
           passengers: true,
@@ -1200,6 +1453,7 @@ export const fetchSchedulesRentals = async () => {
       const orderTotalSum = await db.airBooking.aggregate({
         where: {
           scheduleId: rental.id,
+          paymentStatus:true
         },
         _sum: {
           orderTotal: true,
@@ -1216,6 +1470,92 @@ export const fetchSchedulesRentals = async () => {
 
   return rentalsWithBookingSums;
 };
+
+export const fetchPackageRentals = async () => {
+  const user = await getAuthUser();
+
+  // Fetch the user's profile along with associated tour IDs
+  const profile = await db.profile.findUnique({
+    where: {
+      clerkId: user.id,
+    },
+    select: {
+      tours: {
+        select: {
+          id: true
+        },
+      },
+    },
+  });
+
+  if (!profile || profile.tours.length === 0) {
+    return [];
+  }
+
+  // Extract tour IDs
+  const tourIds = profile.tours.map((tour) => tour.id);
+
+  // Fetch packages for all tours
+  const packages = await db.package.findMany({
+    where: {
+      tourId: { in: tourIds },
+    },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      maxGuests: true,
+      departureDate: true,
+      arrivalDate: true,
+      tourId: true,
+      tour:{
+        select:{
+          id:true,
+          name:true
+        }
+      }
+    },
+    orderBy:{
+      tour:{
+        createdAt:'desc'
+      }
+    }
+  });
+
+  // Fetch total guests and order total sums for each package
+  const packagesWithBookingSums = await Promise.all(
+    packages.map(async (pkg) => {
+      const totalGuestsSum = await db.tourBooking.aggregate({
+        where: {
+          packageId: pkg.id,
+          paymentStatus:true
+        },
+        _sum: {
+          passengers: true,
+        },
+      });
+
+      const orderTotalSum = await db.tourBooking.aggregate({
+        where: {
+          packageId: pkg.id,
+          paymentStatus:true
+        },
+        _sum: {
+          orderTotal: true,
+        },
+      });
+
+      return {
+        ...pkg,
+        totalGuestsSum: totalGuestsSum._sum.passengers || 0, // Ensure no undefined values
+        orderTotalSum: orderTotalSum._sum.orderTotal || 0, // Ensure no undefined values
+      };
+    })
+  );
+
+  return packagesWithBookingSums;
+};
+
 
 
 export async function deleteRoomAction(prevState: { roomId: string }) {
@@ -1235,10 +1575,52 @@ export async function deleteRoomAction(prevState: { roomId: string }) {
   }
 }
 
+export async function deleteScheduleAction(prevState: { scheduleId: string }) {
+  const { scheduleId } = prevState;
+
+  try {
+    await db.schedule.delete({
+      where: {
+        id: scheduleId,
+      },
+    });
+
+    revalidatePath('/myairlines');
+    return { message: 'Schedule deleted successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+}
+
+export async function deletePackageAction(prevState: { packageId: string }) {
+  const { packageId } = prevState;
+
+  try {
+    await db.package.delete({
+      where: {
+        id: packageId,
+      },
+    });
+
+    revalidatePath('/mytours');
+    return { message: 'Package deleted successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+}
+
 export const fetchRoomDetails=async (roomId:string)=>{
   return db.room.findUnique({
     where:{
       id:roomId
+    }
+  })
+}
+
+export const fetchPackageDetails=async (packageId:string)=>{
+  return db.package.findUnique({
+    where:{
+      id:packageId
     }
   })
 }
@@ -1250,6 +1632,84 @@ export const fetchScheduleDetails=async (scheduleId:string)=>{
     }
   })
 }
+
+export const updatePackageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  
+  const rawData = Object.fromEntries(formData);
+  console.log(rawData)
+  try {
+    const packageId=formData.get('packageId') as string
+    const tourId = rawData.tourId as string;
+    const departureDate=rawData.departureTime as string;
+    const arrivalDate=rawData.arrivalTime as string;
+
+    const maxGuests=parseInt(rawData.maxGuests as string, 10);
+    const updatedRawData = {
+      ...rawData,
+      departureDate,
+      arrivalDate,
+      maxGuests
+    };
+    
+    const validatedFields = validateWithZodSchema(packageSchema, updatedRawData);
+    await db.package.update({
+      where:{
+        id:packageId
+      },
+      data: {
+        ...validatedFields,
+        tourId
+      },
+    });
+    revalidatePath(`/mytours/${tourId}/packages/${packageId}/edit`)
+    return{message:'Update Successful'}
+  } catch (error) {
+    console.log(error)
+    return renderError(error)
+  }
+};
+
+export const updateSchedule = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  
+  const rawData = Object.fromEntries(formData);
+  const airlineId=formData.get('airlineId') as string;
+  const scheduleId=formData.get('scheduleId') as string
+  console.log(rawData)
+  try {
+
+    // Validate fields with Zod schema
+    const economyCount=parseInt(rawData.economyCount as string, 10);
+    const businessCount=parseInt(rawData.businessCount as string, 10);
+    const firstClassCount=parseInt(rawData.firstClassCount as string, 10);
+    const updatedRawData = {
+      ...rawData,
+      economyCount, // Ensure quantity is an integer
+      businessCount, // Ensure guests is an integer
+      firstClassCount
+    };
+    
+    const validatedFields = validateWithZodSchema(scheduleSchema, updatedRawData);
+    // Create schedule in the database with validated data, similar to how `createRoomAction` works
+    await db.schedule.update({
+      where:{
+        id:scheduleId
+      },
+      data: {
+        ...validatedFields,
+      },
+    });
+    revalidatePath(`/myairlines/${airlineId}/schedules/${scheduleId}/edit`)
+    return{message:'Update Successful'}
+  } catch (error) {
+    return renderError(error); // Handle error
+  }
+};
 
 export const updateRoomAction=async(prevState:any, formData:FormData):Promise<{message:string}>=>{
   const roomId=formData.get('roomId') as string;
@@ -1305,21 +1765,86 @@ export const updateRoomImageAction=async(prevState:any, formData:FormData):Promi
   }
 }
 
-export const fetchStats=async()=>{
-  await getAdminUser()
-  const userCount=await db.profile.count()
-  const propertiesCount=await db.property.count()
-  const airlinesCount=await db.airline.count()
-  const roomBookingsCount=await db.roomBooking.count()
-  const airBookingsCount=await db.airBooking.count()
-  const bookingsCount=roomBookingsCount+airBookingsCount
-  return{
+export const updatePackageImageAction=async(prevState:any, formData:FormData):Promise<{message:string}>=>{
+  const packageId=formData.get('id') as string;
+  const tourId=formData.get('tid') as string;
+
+  try{
+    const image=formData.get('image') as File
+    const validatedFields=validateWithZodSchema(imageSchema,{image})
+    const fullPath=await UploadImage(validatedFields.image)
+    await db.package.update({
+      where:{
+        id:packageId
+      },
+      data:{
+        image:fullPath
+      }
+    })
+    revalidatePath(`/rentals/${tourId}/rooms/${packageId}/edit`)
+    revalidatePath(`/rentals/${tourId}/rooms/${packageId}/edit`)
+    return{message:'Image Updated Successfully'}
+  }catch(error){
+    return renderError(error)
+  }
+}
+
+export const fetchStats = async () => {
+  await getAdminUser();
+
+  // Count records
+  const userCount = await db.profile.count();
+  const propertiesCount = await db.property.count();
+  const airlinesCount = await db.airline.count();
+  const toursCount=await db.tour.count()
+  const roomBookingsCount = await db.roomBooking.count({where:{paymentStatus:true}});
+  const airBookingsCount = await db.airBooking.count({where:{paymentStatus:true}});
+  const tourBookingsCount = await db.tourBooking.count({where:{paymentStatus:true}});
+  const bookingsCount = roomBookingsCount + airBookingsCount + tourBookingsCount;
+
+  // Calculate total income from all bookings
+  const roomIncome = (await db.roomBooking.aggregate({ where:{paymentStatus:true},_sum: { orderTotal: true } }))._sum.orderTotal || 0;
+  const airIncome = (await db.airBooking.aggregate({ where:{paymentStatus:true},_sum: { orderTotal: true } }))._sum.orderTotal || 0;
+  const tourIncome = (await db.tourBooking.aggregate({ where:{paymentStatus:true},_sum: { orderTotal: true } }))._sum.orderTotal || 0;
+
+  const totalIncome = roomIncome + airIncome + tourIncome;
+
+  return {
     userCount,
     propertiesCount,
     airlinesCount,
-    bookingsCount
+    toursCount,
+    bookingsCount,
+    totalIncome, // Added total income
+  };
+};
+
+export const fetchReserveStats = async (serviceType:string,profileId:string) => {
+
+  const roomsCount = await db.room.count({where:{property:{profileId:profileId}}});
+  const schedulesCount = await db.schedule.count({where:{airline:{profileId:profileId}}});
+  const packagesCount=await db.package.count({where:{tour:{profileId:profileId}}});
+  const roomBookingsCount = await db.roomBooking.count({where:{paymentStatus:true,room:{property:{profileId:profileId}}}});
+  const airBookingsCount = await db.airBooking.count({where:{paymentStatus:true,schedule:{airline:{profileId:profileId}}}});
+  const tourBookingsCount = await db.tourBooking.count({where:{paymentStatus:true,package:{tour:{profileId:profileId}}}});
+
+  const roomIncome = (await db.roomBooking.aggregate({
+    where: {paymentStatus:true,room:{property:{profileId:profileId}}}, 
+    _sum: { orderTotal: true }
+  }))._sum.orderTotal || 0;
+  
+  const airIncome = (await db.airBooking.aggregate({ where:{paymentStatus:true,schedule:{airline:{profileId:profileId}}},_sum: { orderTotal: true } }))._sum.orderTotal || 0;
+  const tourIncome = (await db.tourBooking.aggregate({ where:{paymentStatus:true,package:{tour:{profileId:profileId}}},_sum: { orderTotal: true } }))._sum.orderTotal || 0;
+
+  if(serviceType==="property"){
+    return{roomsCount,roomBookingsCount,roomIncome}
+  }else if(serviceType==="airline"){
+    return{schedulesCount,airBookingsCount,airIncome}
+  }else if(serviceType==="tour"){
+    return{packagesCount,tourBookingsCount,tourIncome}
   }
-}
+};
+
 
 export const fetchSalesDataDay = async () => {
   await getAdminUser();
@@ -1327,19 +1852,24 @@ export const fetchSalesDataDay = async () => {
   date.setDate(date.getDate() - 30);
   const thirtyDaysAgo = date;
 
-  // Fetch Room and Airline bookings
+  // Fetch Room, Airline, and Tour bookings
   const roomSales = await db.roomBooking.findMany({
-    where: { createdAt: { gte: thirtyDaysAgo } },
+    where: { paymentStatus:true,createdAt: { gte: thirtyDaysAgo } },
     orderBy: { createdAt: 'asc' },
   });
 
   const airSales = await db.airBooking.findMany({
-    where: { createdAt: { gte: thirtyDaysAgo } },
+    where: { paymentStatus:true,createdAt: { gte: thirtyDaysAgo } },
     orderBy: { createdAt: 'asc' },
   });
 
-  // Combine both sales data
-  const combinedSales = [...roomSales, ...airSales];
+  const tourSales = await db.tourBooking.findMany({
+    where: { paymentStatus:true,createdAt: { gte: thirtyDaysAgo } },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  // Combine all sales data
+  const combinedSales = [...roomSales, ...airSales, ...tourSales];
 
   // Process sales data
   let dailySales = combinedSales.reduce((total, current) => {
@@ -1354,12 +1884,11 @@ export const fetchSalesDataDay = async () => {
     return total;
   }, [] as Array<{ date: string; total: number }>);
 
-  // **Sort the data in ascending order**
+  // Sort the data in ascending order
   dailySales.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return dailySales;
 };
-
 
 export const fetchSalesDataMonth = async () => {
   await getAdminUser();
@@ -1367,17 +1896,24 @@ export const fetchSalesDataMonth = async () => {
   date.setMonth(date.getMonth() - 6);
   const sixMonthsAgo = date;
 
+  // Fetch Room, Airline, and Tour bookings
   const roomSales = await db.roomBooking.findMany({
-    where: { createdAt: { gte: sixMonthsAgo } },
+    where: { paymentStatus:true,createdAt: { gte: sixMonthsAgo } },
     orderBy: { createdAt: 'asc' },
   });
 
   const airSales = await db.airBooking.findMany({
-    where: { createdAt: { gte: sixMonthsAgo } },
+    where: { paymentStatus:true,createdAt: { gte: sixMonthsAgo } },
     orderBy: { createdAt: 'asc' },
   });
 
-  const combinedSales = [...roomSales, ...airSales];
+  const tourSales = await db.tourBooking.findMany({
+    where: { paymentStatus:true,createdAt: { gte: sixMonthsAgo } },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  // Combine all sales data
+  const combinedSales = [...roomSales, ...airSales, ...tourSales];
 
   let monthlySales = combinedSales.reduce((total, current) => {
     const date = formatDate(current.createdAt, true); // 'YYYY-MM'
@@ -1393,6 +1929,7 @@ export const fetchSalesDataMonth = async () => {
 
   return monthlySales;
 };
+
 
 export const updatePending = async (id: string, type: "property" | "airline" | "tour") => {
   try {
@@ -1413,7 +1950,137 @@ export const updatePending = async (id: string, type: "property" | "airline" | "
 };
 
 
+export const updatePropertyAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user=await getAuthUser()
+  try{
+    const rawData=Object.fromEntries(formData)
+    const propertyId=formData.get('propertyId') as string
 
+      const validatedFields=validateWithZodSchema(propertySchema,rawData)
+      await db.property.update({
+        where:{
+          id:propertyId
+        },
+          data:{
+              ...validatedFields,
+              profileId:user.id,
+              permit:"Pending"
+          }
+      })
+      revalidatePath(`/rentals/${propertyId}/edit`)
+      return{message:'Update Successful'}
+  }catch(error){
+      return renderError(error)
+  }
+}
+
+export const updateAirlineAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user=await getAuthUser()
+  const rawData=Object.fromEntries(formData)
+  try{
+    const airlineId=formData.get('airlineId') as string
+      const validatedFields=validateWithZodSchema(airlineSchema,rawData)
+      await db.airline.update({
+        where:{
+          id:airlineId
+        },
+          data:{
+              ...validatedFields,
+              profileId:user.id,
+          }
+      })
+      revalidatePath(`/myairlines/${airlineId}/edit`)
+      return{message:'Update Successful'}
+  } catch (error) {
+      return renderError(error)
+  }
+};
+
+
+export const updateTourAction=async(
+  prevState:any,
+  formData:FormData
+): Promise<{message:string}>=>{
+  const user=await getAuthUser()
+  try{
+      const rawData=Object.fromEntries(formData)
+      const tourId=formData.get('tourId') as string
+      const validatedFields=validateWithZodSchema(tourSchema,rawData)
+      await db.tour.update({
+        where:{
+          id:tourId
+        },
+          data:{
+              ...validatedFields,
+              profileId:user.id,
+          }
+      })
+      revalidatePath(`/mytours/${tourId}/edit`)
+      return{message:'Update Successful'}
+  }catch(error){
+      return renderError(error)
+  }
+}
+
+export const updatePropertyImageAction=async(prevState:any, formData:FormData):Promise<{message:string}>=>{
+
+  const propertyId=formData.get('pid') as string;
+
+  try{
+    const image=formData.get('image') as File
+    const validatedFields=validateWithZodSchema(imageSchema,{image})
+    const fullPath=await UploadImage(validatedFields.image)
+    await db.property.update({
+      where:{
+        id:propertyId
+      },
+      data:{
+        image:fullPath,
+        permit:"Pending"
+      }
+    })
+    revalidatePath(`/rentals/${propertyId}/edit`)
+    revalidatePath(`/rentals/${propertyId}/edit`)
+    return{message:'Image Updated Successfully'}
+  }catch(error){
+    return renderError(error)
+  }
+}
+
+export const updateAirlineImageAction=async(prevState:any, formData:FormData):Promise<{message:string}>=>{
+
+  const airlineId=formData.get('airlineId') as string;
+
+  try{
+    const image=formData.get('image') as File
+    const validatedFields=validateWithZodSchema(imageSchema,{image})
+    const fullPath=await UploadImage(validatedFields.image)
+    const logo=formData.get('logo') as File
+    const validatedFile=validateWithZodSchema(imageSchema,{image:logo})
+    const logoPath=await UploadImage(validatedFile.image)
+    await db.airline.update({
+      where:{
+        id:airlineId
+      },
+      data:{
+        image:fullPath,
+        logo:logoPath,
+        permit:"Pending"
+      }
+    })
+    revalidatePath(`/myairlines/${airlineId}/edit`)
+    revalidatePath(`/myairlines/${airlineId}/edit`)
+    return{message:'Image Updated Successfully'}
+  }catch(error){
+    return renderError(error)
+  }
+}
 
 
 

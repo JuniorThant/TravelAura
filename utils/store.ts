@@ -15,7 +15,7 @@ export const useRoom = create<RoomState>(() => {
     roomId: '',
     price: 0,
     bookings: [],
-    range: undefined,
+    range: undefined
   };
 });
 
@@ -63,11 +63,28 @@ export const useAirline = create<AirlineState>(() => {
   };
 });
 
+type PackageBookingState={
+  tour:boolean,
+  packageId:string,
+  pricePackage:number,
+  guestsPackage:number
+}
+
+export const usePackage=create<PackageBookingState>(()=>{
+  return{
+    tour:false,
+    packageId:"",
+    pricePackage:0,
+    guestsPackage:1
+  } 
+})
+
 type AirlineBookingState = {
   scheduleIds: string[];
   prices: number[];
   bookings: any[];
   setBooking: (scheduleId: string, price: number, bookingDetails: any) => void;
+  resetBooking: () => void; // Add reset function
 };
 
 export const useAirlineBooking = create<AirlineBookingState>((set) => ({
@@ -78,15 +95,30 @@ export const useAirlineBooking = create<AirlineBookingState>((set) => ({
     set((state) => {
       const index = state.scheduleIds.indexOf(scheduleId);
       if (index === -1) {
-
+        // If the scheduleId is not already selected
         return {
           scheduleIds: [...state.scheduleIds, scheduleId],
           prices: [...state.prices, price],
           bookings: [...state.bookings, bookingDetails],
         };
       } else {
-
-        return state;
+        return state; // Do nothing if it's already selected
       }
     }),
+  resetBooking: () => set({ scheduleIds: [], prices: [], bookings: [] }), // Reset all state
 }));
+
+
+type BoolState={
+  boolRoom:boolean;
+  boolAir:boolean;
+  boolTour:boolean;
+}
+
+export const useBool=create<BoolState>(()=>{
+  return{
+    boolRoom:false,
+    boolAir:false,
+    boolTour:false,
+  }
+})

@@ -29,7 +29,6 @@ export type ItemCardProps = {
     id: string;
     type: string;
     image: string;
-    description: string;
     price: number;
     guests: number;
     quantity: number;
@@ -37,6 +36,20 @@ export type ItemCardProps = {
     amenities: string; // Note that amenities is a string; you can split it into an array if needed
     view: string;
     propertyId: string; // This is now required
+    bookings?: Booking[]; // Add bookings property
+  };
+
+  export type PackageProps = {
+    id: string;
+    name: string;
+    image: string;
+    price:number;
+    description: string;
+    itinerary:string;
+    maxGuests: number;
+    departureDate:Date;
+    arrivalDate:Date;
+    tourId: string; // This is now required
     bookings?: Booking[]; // Add bookings property
   };
   

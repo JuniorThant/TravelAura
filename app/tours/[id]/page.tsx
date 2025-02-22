@@ -5,12 +5,14 @@ import ItemRating from "@/components/card/ItemRating";
 import BreadCrumb from "@/components/properties/BreadCrumb";
 import Description from "@/components/properties/Description";
 import ImageContainer from "@/components/properties/ImageContainer";
+import Packages from "@/components/tour/Package";
 import { fetchAirlineDetails, fetchPropertyDetails, fetchTourDetails } from "@/utils/actions";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { redirect } from "next/navigation";
 
 
-export default async function AirlineDetailsPage({ params }: { params: { id: string } }) {
+export default async function TourDetailsPage({ params }: { params: { id: string } }) {
+  
   // Await the params before accessing it
   const tourId = params.id;
 
@@ -45,6 +47,11 @@ export default async function AirlineDetailsPage({ params }: { params: { id: str
       <section className="lg:grid lg:grid-cols-12 gap-x-12 mt-12">
       <div className="lg:col-span-8">
         {/* <Schedules airlineId={airlineId}/> */}
+        <Packages tourId={tourId}/>
+      </div>
+      <div className="lg:col-span-4">
+        {/* <Schedules airlineId={airlineId}/> */}
+        <BookingWrapper/>
       </div>
       </section>
     </>

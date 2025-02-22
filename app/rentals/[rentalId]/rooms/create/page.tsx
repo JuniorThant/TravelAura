@@ -29,19 +29,18 @@ export default function CreateRoomPage() {
         <h3 className="text-lg mb-4 font-medium">General Info</h3>
         <FormContainer action={createRoomAction}>
           <div className="grid md:grid-cols-2 gap-8 mb-4">
-            <FormInput name="type" type="text" label="Room Type (20 limit)" />
-            <FormInput name="quantity" type="number" label="Room Quantity (30 limit)" />
-            <FormInput name="guests" type="number" label="Guests Quantity (30 limit)" />
-            <FormInput name="beds" type="text" label="Beds (30 limit)" />
-            <FormInput name="view" type="text" label="View (30 limit)" />
+            <FormInput name="type" type="text" label="Room Type " />
+            <FormInput name="quantity" type="number" label="Room Quantity " />
+            <FormInput name="guests" type="number" label="Guests Quantity " />
+            <FormInput name="beds" type="text" label="Beds " />
+            <FormInput name="view" type="text" label="View " />
             <PriceInput />
             <ImageInput name='image'/>
           </div>
-          <TextAreaInput name="description" labelText="Description (10 - 1000 words)" />
           <h3 className="text-lg mt-10 mb-6 font-medium">Amenities</h3>
           <AmenitiesInput type='room'/>
           {/* Add a hidden input for the propertyId */}
-          <input name="propertyId" value={propertyId} />
+          <input name="propertyId" type='hidden' value={propertyId} />
           <SubmitButton text="Create Room" className="mt-12" />
         </FormContainer>
       </div>

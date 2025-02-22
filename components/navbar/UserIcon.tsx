@@ -6,8 +6,8 @@ export default async function UserIcon() {
   const profileImage=await fetchProfileImage()
   if(profileImage){
     return <img src={profileImage} className="w-7 h-7 rounded-full object-cover"/>
-  }
+  }else{
   return (
     <LucideUser2 className="w-7 h-7 bg-primary rounded-full text-white"/>
   )
-}
+}}

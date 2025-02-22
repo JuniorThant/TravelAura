@@ -1,10 +1,10 @@
 'use client'
-import { Calendar } from "@/components/ui/calendar";
 import { useEffect, useState } from "react";
-import { useAirline, useAirlineBooking, useCalendar, useRoom, useSearch } from "@/utils/store";
-import { DateRange } from "react-day-picker";
+import { useAirline, useAirlineBooking, useBool, useCalendar, usePackage, useRoom, useSearch } from "@/utils/store";
+import { DateRange, DayPicker} from "react-day-picker";
 import { SearchIcon } from "lucide-react";
 import GuestSelect from "../ui/guestselect";
+import "react-day-picker/style.css";
 import {
   generateDisabledDates,
   generateDateRange,
@@ -21,10 +21,10 @@ export default function BookingCalendar() {
   const currentDate = new Date();
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
-  const state=useAirline(state=>state)
   const roomBookings=useRoom((state)=>state.bookings)
-  console.log(roomBookings)
   const airBookings=useAirlineBooking((state)=>state.bookings)
+  const {boolRoom,boolAir,boolTour}=useBool((state)=>state)
+
 
   const bookings = (roomBookings && roomBookings.length > 0) ? roomBookings : airBookings;
   const blockedPeriods=generateBlockedPeriods({
@@ -32,13 +32,14 @@ export default function BookingCalendar() {
     today:currentDate
   })
 
+  const {tour}=usePackage(state=>state)
 
-  // ✅ State for async property check
   const [property, setProperty] = useState<boolean | null>(null);
 
   // ✅ States for inputs
   const [range, setRange] = useState<DateRange | undefined>(defaultSelected);
   const [guests, setGuests] = useState(1);
+  const [guestsPackage, setGuestsPackage] = useState(1);
   const [classes, setClasses] = useState("");
   const [origin, setOrigin] = useState(""); // ✅ Added origin state
   const [destination, setDestination] = useState(""); // ✅ Added destination state
@@ -56,19 +57,36 @@ export default function BookingCalendar() {
   useEffect(() => {
     useRoom.setState({ range });
     useCalendar.setState({range})
-  }, [range, guests]);
+    if(boolAir){
+      useAirline.setState({guests:guests})
+    }
+    if (boolTour) {
+      usePackage.setState({ guestsPackage: guestsPackage });
+    }
+  }, [range, guests,guestsPackage]);
 
   // ✅ Handle search with all required states
   const handleSearch = async () => {
     if (!property) {
-      useAirline.setState({
-        travelDate: range?.from as Date,
-        returnDate: range?.to as Date,
-        flightClass:classes || 'economy',
-        guests: guests,
-        origin: origin, // ✅ Added origin
-        destination: destination, // ✅ Added destination
-      });
+      if(range?.from?.getTime() === range?.to?.getTime()){
+        useAirline.setState({
+          travelDate: range?.from as Date,
+          returnDate: null,
+          flightClass:classes || 'economy',
+          guests: guests,
+          origin: origin, // ✅ Added origin
+          destination: destination, // ✅ Added destination
+        });
+      }else{
+        useAirline.setState({
+          travelDate: range?.from as Date,
+          returnDate: range?.to as Date,
+          flightClass:classes || 'economy',
+          guests: guests,
+          origin: origin, // ✅ Added origin
+          destination: destination, // ✅ Added destination
+        });
+      }
     } else {
       useSearch.setState({
         checkIn: range?.from as Date,
@@ -81,15 +99,14 @@ export default function BookingCalendar() {
   return (
     <div>
       <div>
-        <Calendar
+        {(boolAir || boolRoom) && <DayPicker
           mode="range"
           defaultMonth={currentDate}
           selected={range}
           onSelect={setRange}
-          className="mb-1"
           disabled={blockedPeriods}
-        />
-        {!property && (
+        />}
+        {boolAir && (
           <>
             <div className="lg:col-span-12 flex">
             <div className="lg:col-span-6 ml-2">
@@ -119,10 +136,11 @@ export default function BookingCalendar() {
         )}
       </div>
       <div className="flex justify-between mb-4">
-        <GuestSelect onValueChange={setGuests} />
-        <Button onClick={handleSearch}>
+        {(boolAir || boolRoom) &&<GuestSelect onValueChange={setGuests} />}
+        {boolTour &&<GuestSelect onValueChange={setGuestsPackage} />}
+        {(boolAir || boolRoom) && <Button onClick={handleSearch}>
           <SearchIcon className="w-6 h-6" />
-        </Button>
+        </Button>}
       </div>
     </div>
   );

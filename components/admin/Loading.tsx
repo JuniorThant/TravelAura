@@ -3,14 +3,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function StatsLoadingContainer() {
   return (
-    <div className='mt-8 grid md:grid-cols-4 gap-4 overflow-x-auto'>
-      <LoadingCard />
+    <div className='mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
       <LoadingCard />
       <LoadingCard />
       <LoadingCard />
     </div>
   );
 }
+
 
 function LoadingCard() {
   return (

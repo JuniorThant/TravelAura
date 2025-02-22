@@ -32,20 +32,22 @@ export const fileSchema=z.object({
   file:validatePDF()
 })
 
-function validateFile(){
-    const maxUploadSize=1024*1024
-    const acceptedFilesType=['image/']
-    return z
-    .instanceof(File)
-    .refine((file)=>{
-        return !file || file.size <= maxUploadSize;
-    }, 'File size must be less than 1 MB')
-    .refine((file)=>{
-        return(
-            !file || acceptedFilesType.some((type)=>file.type.startsWith(type)) 
-        )
-    }, "File must be an image")
+function validateFile() {
+  const maxUploadSize = 100 * 1024 * 1024; // 100MB
+  const acceptedFilesType = ['image/']; // Accepts any image type
+
+  return z
+      .instanceof(File)
+      .refine((file) => {
+          return !file || file.size <= maxUploadSize;
+      }, 'File size must be less than 100 MB')
+      .refine((file) => {
+          return (
+              !file || acceptedFilesType.some((type) => file.type.startsWith(type))
+          );
+      }, "File must be an image");
 }
+
 
 function validatePDF() {
   const maxUploadSize = 100 * 1024 * 1024; // 100MB
@@ -159,9 +161,6 @@ export const propertySchema = z.object({
     type: z
       .string()
       .min(1, { message: 'Room type is required and cannot be empty.' }),
-    description: z
-      .string()
-      .min(10, { message: 'Description must be at least 10 characters long.' }),
       price: z.coerce.number().int().min(0, {
         message: 'price must be a positive number.',
       }),
@@ -229,4 +228,34 @@ export const scheduleSchema = z.object({
       .number()
       .int()
       .nonnegative({ message: 'First Class Count must be zero or a positive integer.' }),
+});
+
+export const packageSchema = z.object({
+  id: z.string().uuid().optional(), // UUID is automatically generated, so it's optional for creation
+  name: z
+    .string()
+    .min(1, { message: 'Package name is required and cannot be empty.' }),
+  description: z
+    .string()
+    .min(10, { message: 'Description is required and cannot be empty' }),
+    itinerary: z
+    .string()
+    .min(1, { message: 'Itinerary is required and cannot be empty' }),
+    price: z.coerce.number().int().min(0, {
+      message: 'price must be a positive number.',
+    }),
+  maxGuests: z
+    .number()
+    .int()
+    .positive({ message: 'Guests must be a positive integer.' }),
+    departureDate: z
+    .string()
+    .refine((value) => !isNaN(Date.parse(value)), {
+      message: 'Invalid departure date. Must be a valid date string.',
+    }),
+  arrivalDate: z
+    .string()
+    .refine((value) => !isNaN(Date.parse(value)), {
+      message: 'Invalid arrival date. Must be a valid date string.',
+    }),
 });

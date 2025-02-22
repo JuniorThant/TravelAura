@@ -13,7 +13,7 @@ import { DateTimePickerDemo } from '@/components/ui/datepicker';
 
 export default function CreateSchedulePage() {
   const pathname = usePathname();
-  const airlineId = pathname.split('/')[2];
+  const airlineId = pathname ? pathname.split('/')[2] : '';
 
   const [departureTime, setDepartureTime] = useState<Date | null>(new Date());
   const [arrivalTime, setArrivalTime] = useState<Date | null>(new Date());

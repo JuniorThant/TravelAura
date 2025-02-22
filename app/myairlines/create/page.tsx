@@ -27,7 +27,7 @@ export default function CreateAirlinePage() {
             />
             <ImageInput name='logo'/>
             <ImageInput name='image'/>
-            <FileInput name='file'/>
+            <FileInput name='file' label='Upload Your Company License and Documents'/>
           </div>
           <TextAreaInput name='description' labelText='Description (10 - 1000 words)'/>
           <SubmitButton text='create airline' className='mt-12' />

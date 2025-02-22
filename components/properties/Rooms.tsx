@@ -10,7 +10,8 @@ import { FaRegArrowAltCircleDown } from "react-icons/fa";
 import { FaRegArrowAltCircleUp } from "react-icons/fa";
 import { GiTheaterCurtains } from "react-icons/gi";
 import Title from './Title';
-import { useRoom, useSearch } from '@/utils/store';
+import { useAirline, useAirlineBooking, useBool, usePackage, useRoom, useSearch } from '@/utils/store';
+import { Card } from '../ui/card';
 
 export default function Rooms({ propertyId }: { propertyId: string }) {
   const [rooms, setRooms] = useState<RoomProps[]>([]);
@@ -18,6 +19,7 @@ export default function Rooms({ propertyId }: { propertyId: string }) {
 
   // Listen to the search state from useSearch
   const searchState = useSearch((state) => state);
+  const {roomId:rId}=useRoom((state)=>state)
 
   useEffect(() => {
     const getRooms = async () => {
@@ -31,6 +33,17 @@ export default function Rooms({ propertyId }: { propertyId: string }) {
     };
 
     getRooms();
+    useBool.setState({
+      boolRoom:true,
+      boolAir:false,
+      boolTour:false,
+    })
+    useAirlineBooking.setState({
+      scheduleIds:[]
+    })
+    usePackage.setState({
+      packageId:''
+    })
   }, [propertyId, searchState]); // Re-fetch rooms when searchState changes
 
   const handleState = (roomId: string, price: number, bookings: any[]) => {
@@ -39,6 +52,13 @@ export default function Rooms({ propertyId }: { propertyId: string }) {
       price,
       bookings,
     });
+    if(roomId===rId){
+      useRoom.setState({
+        roomId:'',
+        price:0,
+        bookings:[]
+      })
+    }
   };
 
   const toggleDetails = (roomId: string) => {
@@ -51,16 +71,17 @@ export default function Rooms({ propertyId }: { propertyId: string }) {
       <Title text="Available Rooms in This Hotel" />
       <div className="space-y-5">
         {rooms.map((room) => (
-          <div key={room.id} className="border border-black flex p-4" style={{ position: 'relative' }}>
+          <Card key={room.id} className=" flex p-4" style={{ position: 'relative' }}>
             <div className="w-60 h-24 flex items-center justify-center">
               {room.image ? (
+                <div className="relative w-40 h-24">
                 <Image
                   src={room.image}
                   alt="Room image"
-                  width={0}
-                  height={0}
-                  layout="responsive"
+                  fill
+                  className='object-cover'
                 />
+                </div>
               ) : (
                 <span>Room Image</span>
               )}
@@ -81,9 +102,16 @@ export default function Rooms({ propertyId }: { propertyId: string }) {
                   <IoBedSharp className="w-5 h-5" />
                   {room.beds}
                 </div>
-                <button onClick={() => toggleDetails(room.id)} className="flex items-center gap-2">
-                  {expandedRoomId === room.id ? <FaRegArrowAltCircleUp /> : <FaRegArrowAltCircleDown />}
-                </button>
+                <div className='flex gap-3'>
+                <Button 
+                    onClick={() => handleState(room.id, room.price, [])} 
+                  >
+                    {rId===room.id ? "Selected" : "Select"}
+                  </Button>
+                  <button onClick={() => toggleDetails(room.id)} className="flex items-center gap-2">
+                    {expandedRoomId === room.id ? <FaRegArrowAltCircleUp /> : <FaRegArrowAltCircleDown />}
+                  </button>
+                </div>
               </div>
               <div
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -93,14 +121,11 @@ export default function Rooms({ propertyId }: { propertyId: string }) {
                 {expandedRoomId === room.id && (
                   <div className="mt-4 text-sm">
                     <Amenities amenities={room.amenities} text='This room includes'/>
-                    <div className="mt-4">
-                      <Button onClick={() => handleState(room.id, room.price, [])}>Select</Button>
-                    </div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </>

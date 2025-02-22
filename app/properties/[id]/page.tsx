@@ -39,7 +39,6 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
       <section>
           <div className="flex gap-x-4 items-center">
             <h1 className="text-xl font-bold">{name}</h1>
-            <PropertyRating inPage itemId={property.id} itemType="property"/>
           </div>
           <Separator className="mt-8" />
           <Description description={description} />

@@ -1,6 +1,19 @@
+import StatsContainer from "@/components/admin/StatsContainer";
 import { SubmitButton } from "@/components/form/Button"
 import FormContainer from "@/components/form/FormContainer"
 import EmptyList from "@/components/home/EmptyList"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 import {
     Table,
     TableBody,
@@ -17,8 +30,7 @@ import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa"
 
 export default async function RentalsPage() {
     const rentals=await fetchRoomsRentals()
-    const airlines=await fetchSchedulesRentals()
-  if(rentals.length === 0 && airlines.length===0){
+  if(rentals.length === 0){
     return(
         <EmptyList heading="No rentals to display"/>
     )
@@ -26,11 +38,13 @@ export default async function RentalsPage() {
 
   return(
     <>
-        {rentals.length>0 && <><h4 className="mb-4 capitalize">active rooms: {rentals.length}</h4>
+    <StatsContainer serviceType="property"/>
+        {rentals.length>0 && <><h4 className="mb-4 capitalize font-bold">active rooms: {rentals.length}</h4>
         <Table>
             <TableCaption>A List of all Your Rooms</TableCaption>
             <TableHeader>
                 <TableRow>
+                <TableHead>Property Name</TableHead>
                     <TableHead>Room Type</TableHead>
                     <TableHead>Nightly Rate</TableHead>
                     <TableHead>Nights Booked</TableHead>
@@ -42,7 +56,9 @@ export default async function RentalsPage() {
                 {rentals.map((rental)=>{
                     const {id:roomId,type,price,propertyId}=rental
                     const {totalNightsSum,orderTotalSum}=rental
+                    const {name:propertyName}=rental.property
                     return<TableRow>
+                        <TableCell>{propertyName}</TableCell>
                         <TableCell>{type}</TableCell>
                         <TableCell>{formatCurrency(price)}</TableCell>
                         <TableCell>{totalNightsSum || 0}</TableCell>
@@ -57,46 +73,31 @@ export default async function RentalsPage() {
                 })}
             </TableBody>
         </Table></>}
-        {airlines.length>0 && <><h4 className="mb-4 capitalize">active schedules: {airlines.length}</h4>
-        <Table>
-            <TableCaption>A List of all Your Schedules</TableCaption>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Flight Codes</TableHead>
-                    <TableHead>Price Per Trip</TableHead>
-                    <TableHead>Total Passengers</TableHead>
-                    <TableHead>Total Income</TableHead>
-                    <TableHead>Actions</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {airlines.map((airline)=>{
-                    const {id:scheduleId,flightCode,price}=airline
-                    const {totalPassengersSum,orderTotalSum}=airline
-                    return<TableRow>
-                        <TableCell>{flightCode}</TableCell>
-                        <TableCell>{formatCurrency(price)}</TableCell>
-                        <TableCell>{totalPassengersSum || 0}</TableCell>
-                        <TableCell>{formatCurrency(orderTotalSum)}</TableCell>
-                        <TableCell className="flex items-center gap-x-2">
-                            <Link href={`/rentals/${scheduleId}/edit`}>
-                                <FaRegEdit/>
-                            </Link>
-                            <DeleteRoom roomId={scheduleId}/>
-                        </TableCell>
-                    </TableRow>
-                })}
-            </TableBody>
-        </Table></>} 
     </>
   )
 }
 
-function DeleteRoom({roomId}:{roomId:string}){
+  function DeleteRoom({roomId}:{roomId:string}) {
     const deleteRoom=deleteRoomAction.bind(null,{roomId})
-    return <FormContainer action={deleteRoom}>
-      <SubmitButton className='bg-transparent text-black border-none' icon={true}>
-        <FaRegTrashAlt/>
-      </SubmitButton>
-    </FormContainer>
+    return (
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline">Delete</Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The package and its related data will be deleted. Would you like to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <FormContainer action={deleteRoom}>
+                <AlertDialogAction type='submit' className="">Yes</AlertDialogAction>
+            </FormContainer>
+            <AlertDialogCancel>No</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    )
   }

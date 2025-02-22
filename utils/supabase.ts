@@ -59,43 +59,52 @@ export const UploadImage = async (image: File): Promise<string> => {
 
 export const UploadFile = async (file: File): Promise<string> => {
   try {
-    // Validate file type
-    if (!file || !(file instanceof File) || file.type !== 'application/pdf') {
-      throw new Error('Invalid file provided. Only PDFs are allowed.');
+    // Validate file
+    if (!file || !(file instanceof File)) {
+      throw new Error('Invalid file provided.');
+    }
+    if (file.type !== 'application/pdf') {
+      throw new Error('Only PDFs are allowed.');
     }
 
+    // Generate unique file name
     const timestamp = Date.now();
-    const newName = `${timestamp}-${file.name}`;
+    const newName = `${timestamp}-${file.name.replace(/\s+/g, '_')}`;
 
-    // Upload the file to Supabase Storage
-    const { data, error } = await supabase.storage
+    // Generate a presigned URL for direct upload
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from(bucket)
-      .upload(newName, file, { cacheControl: '3600' });
+      .createSignedUploadUrl(newName);
 
-    if (error) {
-      console.error('Upload error:', error.message);
-      throw new Error(`File upload failed: ${error.message}`);
+    if (signedUrlError || !signedUrlData) {
+      throw new Error(`Failed to generate signed URL: ${signedUrlError?.message}`);
     }
 
-    if (!data) {
-      throw new Error('Upload response is empty.');
+    // Upload file using the presigned URL
+    const uploadResponse = await fetch(signedUrlData.signedUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`File upload failed with status: ${uploadResponse.status}`);
     }
 
-    // Get the public URL of the uploaded file
+    // Get public URL after upload
     const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(newName);
 
     if (!publicUrlData?.publicUrl) {
       throw new Error('Failed to retrieve the public URL.');
     }
 
+    console.log('File uploaded successfully:', publicUrlData.publicUrl);
     return publicUrlData.publicUrl;
   } catch (error) {
-    if (error instanceof Error) {
-      console.error('Error in UploadFile:', error.message);
-      throw new Error(error.message);
-    } else {
-      console.error('Unexpected error:', error);
-      throw new Error('An unknown error occurred during file upload.');
-    }
+    console.error('Error in UploadFile:', error);
+    throw new Error(error instanceof Error ? error.message : 'An unknown error occurred during file upload.');
   }
 };
+

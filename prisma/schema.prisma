@@ -79,14 +79,12 @@ model Tour {
   profileId   String
   favorites Favorite[]
   packages Package[]
-  tourBooking TourBooking[]
 }
 
 model Room {
   id          String     @id @default(uuid())
   type        String
   image       String
-  description String
   price       Int
   guests      Int
   quantity    Int
@@ -102,7 +100,7 @@ model Room {
 
 model Schedule {
   id                  String   @id @default(uuid())
-  flightCode          String   @unique            // Unique flight identifier (e.g., AA1234)
+  flightCode          String         
   departureTime       DateTime                    // Date and time of departure
   arrivalTime         DateTime                    // Date and time of arrival
   origin              String                      // Airport or city of origin
@@ -125,6 +123,7 @@ model Schedule {
 model Package {
   id                  String     @id @default(uuid())
   name                String
+  image               String
   departureDate       DateTime
   arrivalDate         DateTime
   price               Int
@@ -135,6 +134,7 @@ model Package {
   updatedAt           DateTime   @updatedAt
   tour    Tour   @relation(fields: [tourId], references: [id], onDelete: Cascade)
   tourId  String
+  tourBooking TourBooking[]
 }
 
 model Favorite {
@@ -198,8 +198,8 @@ model TourBooking {
   profile       Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
   profileId     String
 
-  tour          Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
-  tourId        String
+  package          Package     @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  packageId        String
 
   orderTotal    Int
   passengers    Int

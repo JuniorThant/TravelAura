@@ -37,7 +37,6 @@ export default async function AirlineDetailsPage({ params }: { params: { id: str
       <section>
           <div className="flex gap-x-4 items-center">
             <h1 className="text-xl font-bold">{name}</h1>
-            <ItemRating inPage itemId={airline.id} itemType="airline"/>
           </div>
           <Separator className="mt-8" />
           <Description description={description} />

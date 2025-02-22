@@ -6,7 +6,7 @@ import DateTimePicker from 'react-datetime-picker';
 
 type DateValue = Date | null;
 
-export function DateTimePickerDemo({ label, value, onChange }: { label: string; value: DateValue; onChange: (value: DateValue) => void }) {
+export function DateTimePickerDemo({ label, value, onChange }: { label: string; value: DateValue; onChange?: (value: DateValue) => void }) {
   return (
     <div>
       <Label>{label}</Label>

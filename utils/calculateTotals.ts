@@ -21,3 +21,10 @@ export const calculateTotalsAirline = ({ priceOneWay, priceReturn, guests = 1 }:
     const orderTotalAir = subTotalAir + taxAir;
     return { subTotalAir, taxAir, orderTotalAir };
 };
+
+export const calculateTotalsTour=({pricePackage,guestsPackage}:{pricePackage:number,guestsPackage:number})=>{
+    const subTotalPackage=pricePackage*guestsPackage
+    const taxPackage=subTotalPackage*0.1
+    const orderTotalPackage=subTotalPackage+taxPackage
+    return{subTotalPackage,taxPackage,orderTotalPackage}
+}

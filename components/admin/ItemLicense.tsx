@@ -9,15 +9,17 @@ import { PendingProps } from '@/utils/types';
 import PdfPreview from './PDFPreview';
 import { Button } from '../ui/button';
 import { updatePending } from "@/utils/actions"; // Import the updatePending function
+import EmptyList from '../home/EmptyList';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export default function ItemLicense() {
   const [pendings, setPendings] = useState<PendingProps[]>([]);
+  
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
+
         const data = await fetchPendings();
         // Combine all pending items into a single array
         const combinedPendings = [
@@ -26,9 +28,7 @@ export default function ItemLicense() {
           ...data.tours,
         ];
         setPendings(combinedPendings);
-      } catch (error) {
-        console.error("Error fetching pending items:", error);
-      }
+    
     };
 
     fetchData();
@@ -44,6 +44,10 @@ export default function ItemLicense() {
       console.error("Error updating pending item:", error);
     }
   };
+
+  if(pendings.length===0){
+    return <EmptyList heading='No Items in the pending now' message='Keep tracking of services' btnText='back home'/>
+}
 
   return (
     <>
