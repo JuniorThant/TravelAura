@@ -1791,8 +1791,6 @@ export const updatePackageImageAction=async(prevState:any, formData:FormData):Pr
 
 export const fetchStats = async () => {
   await getAdminUser();
-
-  // Count records
   const userCount = await db.profile.count();
   const propertiesCount = await db.property.count();
   const airlinesCount = await db.airline.count();
