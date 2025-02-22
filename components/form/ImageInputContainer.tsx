@@ -6,7 +6,7 @@ import FormContainer from './FormContainer';
 import ImageInput from './ImageInput';
 import { SubmitButton } from './Button';
 import { type actionFunction } from '@/utils/types';
-import { LuUser2 } from 'react-icons/lu';
+import { LucideUser2 } from 'lucide-react';
 
 type ImageInputContainerProps = {
   image: string;
@@ -22,7 +22,7 @@ function ImageInputContainer(props: ImageInputContainerProps) {
   const [isUpdateFormVisible, setUpdateFormVisible] = useState(false);
 
   const userIcon = (
-    <LuUser2 className='w-24 h-24 bg-primary rounded-md text-white mb-4' />
+    <LucideUser2 className='w-24 h-24 bg-primary rounded-md text-white mb-4' />
   );
   return (
     <div>
