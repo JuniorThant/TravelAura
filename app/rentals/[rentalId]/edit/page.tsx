@@ -17,7 +17,7 @@ export default async function EditPropertyPage({params}:{params:{rentalId:string
     const defaultAmenities:Amenity[]=JSON.parse(property.amenities)
   return <section>
         <h1 className="text-2xl font-semibold mb-8 capitalize">
-            update property details
+            edit property details
         </h1>
         <div className="border p-8 rounded">
             <h3 className="text-lg mb-4 font-medium">General Info</h3>
@@ -49,7 +49,7 @@ export default async function EditPropertyPage({params}:{params:{rentalId:string
           <h3 className='text-lg mt-10 mb-6 font-medium'>Amenities</h3>
           <AmenitiesInput type='property' defaultValue={defaultAmenities}/>
           <input name='propertyId' type='hidden' value={params.rentalId}/>
-          <SubmitButton text='edit rental' className='mt-12' />
+          <SubmitButton text='update' className='mt-12' />
         </FormContainer>
         </div>
     </section>

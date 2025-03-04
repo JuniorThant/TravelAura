@@ -51,7 +51,8 @@ export default function ItemLicense() {
 
   return (
     <>
-      <Title text="Pending Items" />
+    <h3 className='text-center font-bold text-3xl mb-5'>Verify Companies</h3>
+      <Title text="Pending Registrations" />
       <div className="space-y-5">
         {pendings.map((pending) => (
           <div
@@ -146,6 +147,11 @@ export default function ItemLicense() {
   }}
 >
   Approve Registration
+</Button>
+<Button
+  className="m-5 bg-red-500"
+>
+  Reject Registration
 </Button>
 
                 </div>

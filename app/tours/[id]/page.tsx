@@ -39,7 +39,6 @@ export default async function TourDetailsPage({ params }: { params: { id: string
       <section>
           <div className="flex gap-x-4 items-center">
             <h1 className="text-xl font-bold">{name}</h1>
-            <ItemRating inPage itemId={tour.id} itemType="tour"/>
           </div>
           <Separator className="mt-8" />
           <Description description={description} />

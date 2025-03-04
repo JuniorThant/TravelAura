@@ -373,10 +373,10 @@ export const updateProfileImage = async (
                 file:pdfPath
             }
         })
-        redirect('/tours')
     }catch(error){
         return renderError(error)
     }
+    redirect('/tours')
   }
 
   export const fetchProperties = async ({ search = '' }: { search?: string }) => {
@@ -836,6 +836,31 @@ export const fetchPackages=async({tourId}:{tourId:string})=>{
   return packages
 }
 
+export const fetchRoomsById=async({roomId}:{roomId:string})=>{
+  const rooms=await db.room.findMany({
+    where:{
+      id:roomId
+    },
+    select:{
+      id: true,
+      type: true,
+      image: true,
+      price: true,
+      guests: true,
+      quantity: true,
+      beds: true,
+      amenities: true,
+      view: true,
+      propertyId: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    }
+  })
+
+  return rooms
+}
+
 export const fetchRooms = async ({
   propertyId,
   checkIn,
@@ -918,36 +943,56 @@ export const createBookingAction = async (prevState: {
   checkOut: Date;
 }) => {
   const user = await getAuthUser();
-  let bookingId:null|string=null
+  let bookingId: null | string = null;
   const { roomId, checkIn, checkOut } = prevState;
+  
+  // Check room availability
+  const overlappingBookings = await db.roomBooking.findMany({
+    where: {
+      roomId,
+      AND: [
+        { checkIn: { lt: checkOut } }, // Booking starts before the checkOut date
+        { checkOut: { gt: checkIn } }, // Booking ends after the checkIn date
+      ],
+    },
+  });
+  
   const room = await db.room.findUnique({
     where: { id: roomId },
-    select: { price: true },
+    select: { price: true, quantity: true },
   });
+  
   if (!room) {
     return { message: "Room Not Found" };
   }
+  
+  if (overlappingBookings.length >= room.quantity) {
+    return { message: "Room is fully booked for the selected dates" };
+  }
+  
   const { orderTotal, totalNights } = calculateTotals({
     checkIn,
     checkOut,
     price: room.price,
   });
+  
   try {
-    const booking=await db.roomBooking.create({
-      data:{
+    const booking = await db.roomBooking.create({
+      data: {
         checkIn,
         checkOut,
         orderTotal,
         totalNights,
-        profileId:user.id,
-        roomId
-      }
-    })
-    bookingId=booking.id
+        profileId: user.id,
+        roomId,
+      },
+    });
+    bookingId = booking.id;
   } catch (error) {
-    return renderError(error)
+    return renderError(error);
   }
-  redirect(`/checkout?bookingId=${bookingId}&property=true`)
+  
+  redirect(`/checkout?bookingId=${bookingId}&property=true`);
 };
 
 export const createAirlineBookingAction = async (prevState: {
@@ -1062,6 +1107,77 @@ export const createTourBookingAction = async (prevState: {
   }
 
   redirect(`/checkout?bookingId=${bookingId}&tour=true`)
+};
+
+export const fetchSchedulesByIds = async ({
+  scheduleId,
+  return: isRoundTrip,
+}: {
+  scheduleId: string;
+  return: boolean;
+}) => {
+  const schedules = await db.schedule.findMany({
+    where: {
+      id: scheduleId,
+    },
+    select: {
+      id: true,
+      flightCode: true,
+      departureTime: true,
+      arrivalTime: true,
+      origin: true,
+      destination: true,
+      originAirport: true,
+      destinationAirport: true,
+      price: true,
+      status: true,
+      amenities: true,
+      economyCount: true,
+      businessCount: true,
+      firstClassCount: true,
+      airlineId: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  if (!schedules.length) return [];
+
+  if (isRoundTrip) {
+    const returnSchedules = await db.schedule.findMany({
+      where: {
+        origin: schedules[0]?.destination,
+        destination: schedules[0]?.origin,
+      },
+      select: {
+        id: true,
+        flightCode: true,
+        departureTime: true,
+        arrivalTime: true,
+        origin: true,
+        destination: true,
+        originAirport: true,
+        destinationAirport: true,
+        price: true,
+        status: true,
+        amenities: true,
+        economyCount: true,
+        businessCount: true,
+        firstClassCount: true,
+        airlineId: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return schedules.map((outbound) => {
+      return returnSchedules.map((returnTrip) => ({ outbound, returnTrip }));
+    }).flat();
+  }
+
+  return schedules;
 };
 
 export const fetchSchedules = async ({

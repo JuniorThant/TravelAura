@@ -23,13 +23,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+
 import FormContainer from '@/components/form/FormContainer';
+
 import { deleteRoomBookingAction, fetchAirBookings, fetchRoomBookings, fetchTourBookings } from '@/utils/actions';
 
 async function BookingsPage() {
-    const roomBookings=await fetchRoomBookings();
-    const airBookings=await fetchAirBookings()
-    const tourBookings=await fetchTourBookings()
+
+    const users=await ()
     if(roomBookings.length===0 && airBookings.length===0) return <EmptyList heading='No Bookings Now' message='You can explore our services and make bookings'/>
     return(
       <>

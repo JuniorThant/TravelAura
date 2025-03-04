@@ -31,12 +31,6 @@ export default function MenuBar() {
       >
         Tours
       </Link>
-      <Link
-        href="/search"
-        className={`${isActive('/search') ? 'text-blue-500' : ''} hover:text-blue-500 transition duration-300`}
-      >
-        Search Services
-      </Link>
     </div>
   );
 }

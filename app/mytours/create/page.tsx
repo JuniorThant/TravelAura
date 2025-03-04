@@ -18,18 +18,18 @@ export default function CreateTourPage() {
             <FormInput
               name='name'
               type='text'
-              label='Name (20 limit)'
+              label='Name'
             />
             <FormInput
               name='tagline'
               type='text '
-              label='Tagline (30 limit)'
+              label='Tagline'
             />
             <ImageInput name='image'/>
-            <FileInput name='file'/>
+            <FileInput name='file' label='Upload you company license and documents (Only in PDF Format)'/>
           </div>
-          <TextAreaInput name='address' labelText='Address (10 - 100 words)' rows={2}/>
-          <TextAreaInput name='description' labelText='Description (10 - 1000 words)'/>
+          <TextAreaInput name='address' labelText='Address' rows={2}/>
+          <TextAreaInput name='description' labelText='Description'/>
           <SubmitButton text='create tour' className='mt-12' />
         </FormContainer>
         </div>

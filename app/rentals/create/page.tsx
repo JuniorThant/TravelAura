@@ -35,7 +35,7 @@ export default function CreatePropertyPage() {
           <TextAreaInput name='description' labelText='Description (10 - 1000 words)'/>
           <h3 className='text-lg mt-10 mb-6 font-medium'>Amenities</h3>
           <AmenitiesInput type='property'/>
-          <SubmitButton text='create rental' className='mt-12' />
+          <SubmitButton text='register rental' className='mt-12' />
         </FormContainer>
         </div>
     </section>

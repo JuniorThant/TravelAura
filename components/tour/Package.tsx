@@ -4,7 +4,6 @@ import { fetchPackages } from "@/utils/actions";
 import Image from "next/image";
 import { PackageProps } from '@/utils/types';
 import { Button } from '../ui/button';
-import { IoBedSharp } from "react-icons/io5";
 import { FaRegArrowAltCircleDown, FaRegArrowAltCircleUp } from "react-icons/fa";
 import Title from '../properties/Title';
 import { Card } from '../ui/card';
@@ -15,7 +14,6 @@ export default function Packages({ tourId }: { tourId: string }) {
   const [expandedPackageId, setExpandedPackageId] = useState<string | null>(null);
   const {packageId:pkgId}=usePackage((state)=>state)
 
-  // Fetch packages on mount
   useEffect(() => {
     async function loadPackages() {
       const data = await fetchPackages({ tourId });

@@ -13,7 +13,7 @@ export default async function StatsContainer({serviceType}: {serviceType?: strin
         <StatsCard title='airlines' value={data.airlinesCount || 0}/>
         <StatsCard title='tours' value={data.toursCount || 0}/>
         <StatsCard title='bookings' value={data.bookingsCount || 0}/>
-        <StatsCard title='total income' value={data.totalIncome || 0}/>
+        <StatsCard title='total income' value={data.totalIncome || 0} dollar/>
       </div>
       </>)
   }
@@ -28,7 +28,7 @@ export default async function StatsContainer({serviceType}: {serviceType?: strin
       <div className='mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-5'>
         <StatsCard title='rooms' value={data?.roomsCount || 0}/>
         <StatsCard title='bookings' value={data?.roomBookingsCount || 0}/>
-        <StatsCard title='total income' value={data?.roomIncome || 0}/>
+        <StatsCard title='total income' value={data?.roomIncome || 0} dollar/>
       </div>
       </>)
   }
@@ -38,7 +38,7 @@ export default async function StatsContainer({serviceType}: {serviceType?: strin
       <div className='mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-5'>
         <StatsCard title='schedules' value={data?.schedulesCount || 0}/>
         <StatsCard title='bookings' value={data?.airBookingsCount || 0}/>
-        <StatsCard title='total income' value={data?.airIncome || 0}/>
+        <StatsCard title='total income' value={data?.airIncome || 0} dollar/>
       </div>
     </>)
   }
@@ -48,7 +48,7 @@ export default async function StatsContainer({serviceType}: {serviceType?: strin
       <div className='mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-5'>
         <StatsCard title='packages' value={data?.packagesCount || 0}/>
         <StatsCard title='bookings' value={data?.tourBookingsCount || 0}/>
-        <StatsCard title='total income' value={data?.tourIncome || 0}/>
+        <StatsCard title='total income' value={data?.tourIncome || 0} dollar/>
       </div>
     </>)
   }
