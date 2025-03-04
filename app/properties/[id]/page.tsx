@@ -5,7 +5,6 @@ import Amenities from "@/components/properties/Amenities";
 import BreadCrumb from "@/components/properties/BreadCrumb";
 import Description from "@/components/properties/Description";
 import ImageContainer from "@/components/properties/ImageContainer";
-import PropertyMap from "@/components/properties/PropertyMap";
 import Rooms from "@/components/properties/Rooms";
 import { fetchPropertyDetails } from "@/utils/actions";
 import { Separator } from "@radix-ui/react-dropdown-menu";
@@ -43,7 +42,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
           <Separator className="mt-8" />
           <Description description={description} />
           <Amenities amenities={amenities} text='The amenities of this hotel include:'/>
-          <PropertyMap address={address} />
+          {/* <PropertyMap address={address} /> */}
       </section>
       <section className="lg:grid lg:grid-cols-12 gap-x-12 mt-12">
       <div className="lg:col-span-8">

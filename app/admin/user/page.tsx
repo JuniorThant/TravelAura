@@ -1,6 +1,6 @@
 import EmptyList from '@/components/home/EmptyList';
 import Link from 'next/link';
-
+import { deleteRoomBookingAction, fetchAirBookings, fetchRoomBookings, fetchTourBookings, getAuthUser } from '@/utils/actions';
 import { formatDate, formatCurrency, formatDateTime } from '@/utils/format';
 import {
   Table,
@@ -26,11 +26,14 @@ import { Button } from "@/components/ui/button"
 
 import FormContainer from '@/components/form/FormContainer';
 
-import { deleteRoomBookingAction, fetchAirBookings, fetchRoomBookings, fetchTourBookings } from '@/utils/actions';
+
 
 async function BookingsPage() {
 
-    const users=await ()
+    const users=await getAuthUser()
+    const roomBookings=await fetchRoomBookings()
+    const airBookings=await fetchAirBookings()
+    const tourBookings=await fetchTourBookings()
     if(roomBookings.length===0 && airBookings.length===0) return <EmptyList heading='No Bookings Now' message='You can explore our services and make bookings'/>
     return(
       <>
