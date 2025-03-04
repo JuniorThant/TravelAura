@@ -2,10 +2,10 @@
 
 import { useAirline, useAirlineBooking, useBool, usePackage, useRoom } from "@/utils/store"
 import { SignInButton, useAuth } from "@clerk/nextjs"
-import { Button } from "react-day-picker"
 import FormContainer from "../form/FormContainer"
 import { SubmitButton } from "../form/Button"
 import { createAirlineBookingAction, createBookingAction, createTourBookingAction } from "@/utils/actions"
+import { Button } from "../ui/button"
 
 export default function ConfirmBooking() {
     const {userId}=useAuth()

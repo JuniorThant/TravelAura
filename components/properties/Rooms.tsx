@@ -10,7 +10,7 @@ import { FaRegArrowAltCircleDown } from "react-icons/fa";
 import { FaRegArrowAltCircleUp } from "react-icons/fa";
 import { GiTheaterCurtains } from "react-icons/gi";
 import Title from './Title';
-import { useAirline, useAirlineBooking, useBool, usePackage, useRoom, useSearch } from '@/utils/store';
+import {  useAirlineBooking, useBool, usePackage, useRoom, useSearch } from '@/utils/store';
 import { Card } from '../ui/card';
 
 export default function Rooms({ propertyId }: { propertyId: string }) {

@@ -1,6 +1,6 @@
 import EmptyList from "@/components/home/EmptyList";
 import ItemsList from "@/components/home/ItemsList";
-import { fetchMyAirlines, fetchMyProperties } from "@/utils/actions";
+import { fetchMyAirlines } from "@/utils/actions";
 
 async function MyAirlinesPage() {
     const { airlines, pathname } = await fetchMyAirlines(); // Destructure the returned object

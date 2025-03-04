@@ -26,7 +26,7 @@ import {
 import { deleteRoomAction, fetchRoomsRentals, fetchSchedulesRentals } from "@/utils/actions"
 import { formatCurrency } from "@/utils/format"
 import Link from "next/link"
-import { FaRegEdit, FaRegTrashAlt } from "react-icons/fa"
+import { FaRegEdit} from "react-icons/fa"
 
 export default async function RentalsPage() {
     const rentals=await fetchRoomsRentals()

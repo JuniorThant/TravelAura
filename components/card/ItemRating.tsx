@@ -2,8 +2,6 @@ import React from "react";
 import { FaStar } from "react-icons/fa6";
 
 export default function ItemRating({
-  itemId,
-  itemType,
   inPage,
 }: {
   itemId: string;

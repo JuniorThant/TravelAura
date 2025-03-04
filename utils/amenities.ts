@@ -3,7 +3,7 @@ import { IconType } from 'react-icons';
 import { FaSwimmingPool, FaShuttleVan, FaBed, FaWifi, FaBath, FaUtensils, FaTv, FaPlane, FaCar, FaDog, FaUmbrellaBeach, FaBicycle } from 'react-icons/fa'; // Example icons
 import { FaVolleyball } from 'react-icons/fa6';
 import { GiMicrophone, GiPoolTriangle, GiProtectionGlasses, GiWeightLiftingUp } from 'react-icons/gi';
-import { LuMic, LuWine } from 'react-icons/lu';
+import {  LuWine } from 'react-icons/lu';
 import { MdAirlineSeatLegroomExtra, MdAirlineSeatReclineExtra, MdCleaningServices, MdCurrencyExchange, MdKayaking, MdLiveTv, MdOutlet, MdOutlineChildFriendly, MdOutlineLocalLaundryService, MdOutlineSecurity, MdParagliding } from 'react-icons/md';
 import { TbFridge, TbMassage } from 'react-icons/tb';
 import { PiHairDryerBold } from "react-icons/pi";

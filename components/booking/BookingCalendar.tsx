@@ -6,15 +6,12 @@ import { SearchIcon } from "lucide-react";
 import GuestSelect from "../ui/guestselect";
 import "react-day-picker/style.css";
 import {
-  generateDisabledDates,
-  generateDateRange,
   defaultSelected,
   generateBlockedPeriods,
 } from "@/utils/calendar";
 import { Button } from "../ui/button";
 import { useParams } from "next/navigation";
-import { fetchAirlineById, haveProperty } from "@/utils/actions";
-import ClassSelect from "../airlines/ClassSelect";
+import {  haveProperty } from "@/utils/actions";
 import FormInput from "../form/FormInput";
 
 export default function BookingCalendar() {

@@ -4,11 +4,10 @@ import DatePickers from '@/components/form/DatePickers';
 import FormContainer from '@/components/form/FormContainer';
 import FormInput from '@/components/form/FormInput';
 import PriceInput from '@/components/form/PriceInput';
-import { DateTimePickerDemo } from '@/components/ui/datepicker';
-import {  fetchScheduleDetails, updateRoomAction, updateRoomImageAction, updateSchedule } from '@/utils/actions'
+import {  fetchScheduleDetails,  updateSchedule } from '@/utils/actions'
 import { Amenity } from '@/utils/amenities';
 import { redirect } from 'next/navigation'
-import React, { useState } from 'react'
+import React from 'react'
 
 export default async function EditAirlinePage({ params }: { params: { id: string; scheduleId: string } }) {
     

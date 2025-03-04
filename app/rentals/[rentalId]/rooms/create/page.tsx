@@ -2,12 +2,11 @@
 import FormInput from '@/components/form/FormInput';
 import FormContainer from '@/components/form/FormContainer';
 import { SubmitButton } from '@/components/form/Button';
-import TextAreaInput from '@/components/form/TextAreaInput';
 import AmenitiesInput from '@/components/form/AmenitiesInput';
 import ImageInput from '@/components/form/ImageInput';
 import PriceInput from '@/components/form/PriceInput';
 import { createRoomAction } from '@/utils/actions';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export default function CreateRoomPage() {
   const pathname=usePathname() 

@@ -1,6 +1,5 @@
 import AmenitiesInput from '@/components/form/AmenitiesInput';
 import { SubmitButton } from '@/components/form/Button';
-import CategoriesInput from '@/components/form/CategoriesInput';
 import FormContainer from '@/components/form/FormContainer';
 import FormInput from '@/components/form/FormInput';
 import ImageInputContainer from '@/components/form/ImageInputContainer'
@@ -9,7 +8,6 @@ import TextAreaInput from '@/components/form/TextAreaInput';
 import { fetchRoomDetails, updateRoomAction, updateRoomImageAction } from '@/utils/actions'
 import { Amenity } from '@/utils/amenities';
 import { redirect } from 'next/navigation'
-import { stringify } from 'querystring';
 import React from 'react'
 
 export default async function EditRentalPage({ params }: { params: { rentalId: string; roomId: string } }) {
@@ -37,7 +35,6 @@ export default async function EditRentalPage({ params }: { params: { rentalId: s
             <FormInput name="view" type="text" label="View (30 limit)" defaultValue={room.view}/>
             <PriceInput defaultValue={room.price}/>
           </div>
-          <TextAreaInput name="description" labelText="Description (10 - 1000 words)" defaultValue={room.description}/>
           <input name='roomId' type='hidden' value={room.id}/>
           <input name='propertyId' type='hidden' value={room.propertyId}/>
           <h3 className="text-lg mt-10 mb-6 font-medium">Amenities</h3>

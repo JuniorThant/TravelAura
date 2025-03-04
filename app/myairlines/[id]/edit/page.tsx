@@ -1,10 +1,8 @@
 import FormInput from '@/components/form/FormInput';
 import FormContainer from '@/components/form/FormContainer';
-import { createAirlineAction, fetchAirlineDetails, updateAirlineAction, updateAirlineImageAction } from '@/utils/actions';
+import {  fetchAirlineDetails, updateAirlineAction, updateAirlineImageAction } from '@/utils/actions';
 import { SubmitButton } from '@/components/form/Button';
 import TextAreaInput from '@/components/form/TextAreaInput';
-import ImageInput from '@/components/form/ImageInput';
-import FileInput from '@/components/form/FileInput';
 import { redirect } from 'next/navigation';
 import ImageInputContainer from '@/components/form/ImageInputContainer';
 

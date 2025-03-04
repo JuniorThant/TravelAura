@@ -5,8 +5,6 @@ import { SubmitButton } from '@/components/form/Button';
 import CategoriesInput from '@/components/form/CategoriesInput';
 import TextAreaInput from '@/components/form/TextAreaInput';
 import AmenitiesInput from '@/components/form/AmenitiesInput';
-import ImageInput from '@/components/form/ImageInput';
-import FileInput from '@/components/form/FileInput';
 import { Amenity } from '@/utils/amenities';
 import { redirect } from 'next/navigation';
 import ImageInputContainer from '@/components/form/ImageInputContainer';

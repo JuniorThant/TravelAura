@@ -1,6 +1,6 @@
 // BookingContainer.tsx
 "use client"
-import { useAirlineBooking, useBool, useCalendar, usePackage, useRoom } from "@/utils/store";
+import {  useBool, useCalendar} from "@/utils/store";
 import BookingForm from "./BookingForm";
 import ConfirmBooking from "./ConfirmBooking";
 

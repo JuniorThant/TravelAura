@@ -41,7 +41,7 @@ export default function RootLayout({
             {children}
             <Chatbot/>
           </main>
-            {/* <Footer/> */}
+            <Footer/>
         </body>
       </html>
     </ClerkProvider>

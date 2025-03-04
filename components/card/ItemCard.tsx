@@ -1,9 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import PropertyRating from "./ItemRating";
 import FavoriteToggleButton from "./FavoriteToggleButton";
 import { ItemCardProps } from "@/utils/types";
-import ItemRating from "./ItemRating";
 import { fetchLowestPrice } from "@/utils/actions";
 
 export default async function ItemCard({ item, pathname }: { item: ItemCardProps, pathname?: string }) {

@@ -2,11 +2,10 @@
 import { useState, useEffect } from 'react';
 import { fetchPendings } from "@/utils/actions";
 import Image from "next/image";
-import { Document, Page, pdfjs } from 'react-pdf';
+import {  pdfjs } from 'react-pdf';
 import Title from '../properties/Title';
 import Amenities from '../properties/Amenities';
 import { PendingProps } from '@/utils/types';
-import PdfPreview from './PDFPreview';
 import { Button } from '../ui/button';
 import { updatePending } from "@/utils/actions"; // Import the updatePending function
 import EmptyList from '../home/EmptyList';

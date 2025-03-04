@@ -16,7 +16,7 @@ export default function FavoriteToggleForm({
   favoriteId,
   itemType,
 }: FavoriteToggleFormProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '/';
   const toggleAction = () =>
     toggleFavoriteAction({
       itemId,

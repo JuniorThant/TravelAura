@@ -7,8 +7,6 @@ import "react-calendar/dist/Calendar.css";
 import "react-clock/dist/Clock.css";
 import { DatePickerDemo } from "../ui/datapickerdemo";
 
-type DateValue = Date | null;
-
 export default function DatePickers({
   defaultDeparture,
   defaultArrival,

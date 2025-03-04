@@ -1,12 +1,10 @@
-import Schedules from "@/components/airlines/Schedules";
 import BookingWrapper from "@/components/booking/BookingWrapper";
 import FavoriteToggleButton from "@/components/card/FavoriteToggleButton";
-import ItemRating from "@/components/card/ItemRating";
 import BreadCrumb from "@/components/properties/BreadCrumb";
 import Description from "@/components/properties/Description";
 import ImageContainer from "@/components/properties/ImageContainer";
 import Packages from "@/components/tour/Package";
-import { fetchAirlineDetails, fetchPropertyDetails, fetchTourDetails } from "@/utils/actions";
+import {  fetchTourDetails } from "@/utils/actions";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { redirect } from "next/navigation";
 

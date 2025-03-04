@@ -8,7 +8,6 @@ import { UploadFile, UploadImage } from "./supabase";
 import { calculateTotals, calculateTotalsAirline, calculateTotalsTour } from "./calculateTotals";
 import { RoomProps } from "./types";
 import { formatDate } from "./format";
-import { sendApprovalEmail } from "./email";
 
 
 export const getAuthUser = async () => {
