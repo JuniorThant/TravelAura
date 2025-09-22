@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/airlines(.*)',
   '/tours(.*)',
 ]);
+
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware((auth, req) => {
@@ -24,7 +25,8 @@ export default clerkMiddleware((auth, req) => {
     return NextResponse.redirect(new URL('/', req.url));
   }
 
-  // Nothing to return if allowed
+  // ✅ Always return next if allowed
+  return NextResponse.next();
 });
 
 export const config = {
